@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{Uses the RedCAP API}
   spec.homepage      = "https://github.com/chrisortman/redcap-ruby.git"
   spec.license       = "MIT"
-  spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
+  spec.required_ruby_version = Gem::Requirement.new(">= 2.5.0")
 
   spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
 
@@ -26,4 +26,6 @@ Gem::Specification.new do |spec|
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+  spec.add_dependency('faraday', '~> 1.1')
+  spec.add_dependency('activesupport', '>= 5.2')
 end
