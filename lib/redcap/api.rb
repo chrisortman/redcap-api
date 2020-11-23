@@ -1,8 +1,9 @@
 require 'active_support/json'
 require 'active_support/core_ext'
 require 'faraday'
+require 'logger'
 
-module Redcap
+module RedCAP
   class API
 
     INCOMPLETE_CODE = 0
@@ -12,6 +13,7 @@ module Redcap
     def initialize(url:, token:)
       @redcap_api_token = token
       @api_url = url
+      @logger = ::Logger.new(STDOUT)
     end
 
     def redcap_api_token
@@ -59,26 +61,98 @@ module Redcap
 
       # Because this API is implemented in singular
       # fashion, it can only handle 1 record import
-      # and so only return 1 ID. 
+      # and so only return 1 ID.
       # That's why we assume a single element array
       # and extract it for the caller
       JSON.parse(resp.body).first
     end
 
+    def import_repeating(record_id, records, instrument)
+      raise "Instrument names should be lower case: #{instrument}" if instrument =~ /[A-Z]+/
+      existing = export_records([record_id], fields: ["record_id"], forms: Array(instrument))
+
+      instance_num = existing.select{ |r|
+        r["redcap_repeat_instrument"] == instrument
+      }.map{ |r|
+        r["redcap_repeat_instance"]
+      }.max || 0
+
+      records = Array(records)
+      data = Array(records).map do |r|
+
+        instance_num += 1
+
+        if r.is_a?(Hash)
+          r.extend HashRecordAccessors
+        end
+        r.record_id = record_id
+        r.instrument = instrument
+        r.instance = instance_num
+        r.redcap_hash
+      end
+
+      options = {
+        :token => redcap_api_token,
+        :content => 'record',
+        :format => 'json',
+        :type => 'flat',
+        :overwriteBehavior => 'normal',
+        :forceAutoNumber => 'false',
+        :data => data.to_json,
+        :returnContent => 'count',
+        :returnFormat => 'json'
+      }
+
+      resp = redcap_post('/', body: options)
+      raise "Error importing repeating  record\n#{format_response_error(resp)}" unless resp.success?
+
+      # Because this API is implemented in singular
+      # fashion, it can only handle 1 record import
+      # and so only return 1 ID.
+      # That's why we assume a single element array
+      # and extract it for the caller
+      JSON.parse(resp.body)["count"].to_i # I suspect this count value is not accurate
+    end
+
+
+    def import_file(record_id, field_name, file:, file_name: nil, content_type: nil, event: nil, repeat_instance: nil)
+
+      file = Faraday::FilePart.new(file, content_type, file_name)
+
+      options = {
+        :token => redcap_api_token,
+        :content => 'file',
+        :action => 'import',
+        :record => record_id,
+        :field => field_name,
+        :file => file,
+        :event => '',
+        :returnFormat => 'json'
+      }
+
+      options[:event] = event unless event.nil?
+      options[:repeat_instance] = repeat_instance unless repeat_instance.nil?
+
+      resp = redcap_post('/', body: options)
+
+
+      raise "Error importing file\n#{format_response_error(resp)}" unless resp.success?
+      puts resp.body
+      #returning something useful because otherwise respons is empty / nil
+      true
+    end
     def format_response_error(resp)
       resp.body
     end
 
     def export_records(records = nil, fields: ["record_id"], forms: [])
 
-      if records.kind_of?(Enumerable) || records.nil?
-        return_single = false
-      else
-        return_single = true
-      end
-
       if !records.nil?
         records = Array(records)
+      end
+
+      if !forms.kind_of?(Enumerable) && forms.present?
+        forms = Array(forms)
       end
 
       #TODO: How do i get record_id in here
@@ -111,23 +185,40 @@ module Redcap
       raise "Error exporting records\n#{format_response_error(resp)}" unless resp.success?
       parsed = JSON.parse(resp.body)
 
-      if return_single
-        parsed.first
-      else
-        parsed
-      end
+      parsed
     end
 
-    def redcap_post(body:)
+    def delete_records(record_ids)
+      raise "Must give record ids" if record_ids.nil?
 
-      # Lot going on here.
-      # URI.join is a bit particular. 
-      # We have to surround redcap with / because the first
-      # one makes it so we'll replace any path info on api_url
-      # and the second allows api to follow
-      # Our URL must end with a slash or redcap errors
-      uri = URI.join(@api_url, "/redcap/","api/").to_s
-      Faraday.post(uri, body)
+      record_ids = Array(record_ids)
+
+      options = {
+        :token => redcap_api_token,
+        :content => 'record',
+        :action => 'delete',
+        :records => record_ids
+      }
+
+      resp = redcap_post(body: options)
+      raise "Error deleting records\n#{format_response_error(resp)}" unless resp.success?
+      count = resp.body.to_i
+      count
+    end
+
+    def redcap_post(path="/", body:)
+
+      conn = Faraday.new(url: @api_url) do |conn|
+        conn.response :logger, nil, { headers: true, bodies: true }
+
+        # POST/PUT params encoders:
+        conn.request :multipart
+        conn.request :url_encoded
+
+        # Last middleware must be the adapter:
+        conn.adapter :net_http
+      end
+      conn.post("/redcap/api/", body)
     end
 
     def generate_next_record_id?(record)

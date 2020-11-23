@@ -4,6 +4,7 @@ PATH
     redcap (0.1.0)
       activesupport (>= 5.2)
       faraday (~> 1.1)
+      zeitwerk (>= 2.0)
 
 GEM
   remote: https://rubygems.org/

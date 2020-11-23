@@ -1,3 +1,3 @@
-module Redcap
+module RedCAP
   VERSION = "0.1.0"
 end
