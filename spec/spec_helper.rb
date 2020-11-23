@@ -1,6 +1,6 @@
 require "bundler/setup"
 require 'dotenv/load'
-require "redcap"
+require "redcap/api"
 require 'byebug'
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

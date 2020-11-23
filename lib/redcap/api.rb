@@ -1,8 +1,9 @@
+require_relative '../redcap'
+
 require 'active_support/json'
 require 'active_support/core_ext'
 require 'faraday'
 require 'logger'
-
 module RedCAP
   class API
 
