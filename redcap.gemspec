@@ -1,7 +1,7 @@
 require_relative 'lib/redcap/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "redcap"
+  spec.name          = "redcap-api"
   spec.version       = RedCAP::VERSION
   spec.authors       = ["Chris Ortman"]
   spec.email         = ["chris-ortman@uiowa.edu"]
