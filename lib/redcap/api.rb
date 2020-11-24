@@ -156,7 +156,6 @@ module RedCAP
         forms = Array(forms)
       end
 
-      #TODO: How do i get record_id in here
       options = {
         :token => redcap_api_token,
         :content => 'record',

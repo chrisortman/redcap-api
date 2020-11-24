@@ -1,8 +1,6 @@
 # RedCAP
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/redcap`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+API Client library for interacting with RedCAP
 
 ## Installation
 
@@ -22,7 +20,15 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+require 'redcap/api'
+api = RedCAP::API.new(
+    url: 'https://redcap-test.icts.uiowa.edu',
+    token: ENV['REDCAP_API_TOKEN']
+)
+
+records = subject.export_records()
+```
 
 ## Development
 
