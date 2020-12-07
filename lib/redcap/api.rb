@@ -146,7 +146,7 @@ module RedCAP
       resp.body
     end
 
-    def export_records(records = nil, fields: ["record_id"], forms: [])
+    def export_records(records = nil, fields: ["record_id"], forms: [], options: {})
 
       if !records.nil?
         records = Array(records)
@@ -156,7 +156,7 @@ module RedCAP
         forms = Array(forms)
       end
 
-      options = {
+      merged_options = {
         :token => redcap_api_token,
         :content => 'record',
         :format => 'json',
@@ -167,21 +167,21 @@ module RedCAP
         :exportSurveyFields => 'false',
         :exportDataAccessGroups => 'false',
         :returnFormat => 'json'
-      }
+      }.merge(options)
 
       records.each_with_index do |record,i|
-        options["records[#{i}]"] = record.to_s
+        merged_options["records[#{i}]"] = record.to_s
       end unless records.nil? || records.empty?
 
       fields.each_with_index do |field,i|
-        options["fields[#{i}]"] = field.to_s
+        merged_options["fields[#{i}]"] = field.to_s
       end unless fields.nil? || fields.empty?
 
       forms.each_with_index do |form,i|
-        options["forms[#{i}]"] = form.to_s
+        merged_options["forms[#{i}]"] = form.to_s
       end unless forms.nil? || forms.empty?
 
-      resp = redcap_post( body: options)
+      resp = redcap_post( body: merged_options)
       raise "Error exporting records\n#{format_response_error(resp)}" unless resp.success?
       parsed = JSON.parse(resp.body)
 
