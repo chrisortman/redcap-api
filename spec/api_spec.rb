@@ -4,7 +4,7 @@ RSpec.describe RedCAP::API do
 
   subject {
     api = RedCAP::API.new(
-      url: 'https://redcap-test.icts.uiowa.edu',
+      url: 'https://redcap.example.com',
       token: ENV['REDCAP_API_TOKEN']
     )
   }
