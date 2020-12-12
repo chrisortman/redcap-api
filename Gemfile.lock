@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    redcap-api (0.1.1)
+    redcap-api (0.1.2)
       activesupport (>= 5.2)
       faraday (~> 1.1)
       zeitwerk (>= 2.0)
