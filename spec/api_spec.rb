@@ -4,7 +4,7 @@ RSpec.describe RedCAP::API do
 
   subject {
     api = RedCAP::API.new(
-      url: 'https://redcap.example.com',
+      url: ENV['REDCAP_TEST_URL'] || 'https://redcap.example.com',
       token: ENV['REDCAP_API_TOKEN']
     )
   }
@@ -73,6 +73,42 @@ RSpec.describe RedCAP::API do
 
     ])
 
+    # Update one of these repeating records
+    subject.import_repeating(
+      new_record_id,
+      [
+        {:redcap_repeat_instance => 2, 'document_type' => 'ChangedRepeatingX'}
+      ],
+      'medicalrelease'
+    )
+
+    records = subject.export_records(
+      new_record_id,
+      fields: %w(record_id document_type),
+      forms: 'medicalrelease'
+    )
+
+    expect(records).to match([
+      a_hash_including( {
+        'record_id' => new_record_id,
+        'redcap_repeat_instrument' => '',
+        'redcap_repeat_instance' => '',
+        'document_type' => ''
+      } ),
+      a_hash_including( {
+        'record_id' => new_record_id,
+        'redcap_repeat_instrument' => 'medicalrelease',
+        'redcap_repeat_instance' => 1,
+        'document_type' => 'DocumentA'
+      } ),
+      a_hash_including( {
+        'record_id' => new_record_id,
+        'redcap_repeat_instrument' => 'medicalrelease',
+        'redcap_repeat_instance' => 2,
+        'document_type' => 'ChangedRepeatingX'
+      } ),
+
+    ])
     # Add a file to one of my repeat instances
     File.open(fixture_file_path('official_document.pdf')) do |file_io|
       result = subject.import_file(

@@ -81,14 +81,19 @@ module RedCAP
       records = Array(records)
       data = Array(records).map do |r|
 
-        instance_num += 1
 
         if r.is_a?(Hash)
           r.extend HashRecordAccessors
         end
         r.record_id = record_id
         r.instrument = instrument
-        r.instance = instance_num
+
+        # Allows updating existing or creating new
+        if r.instance.nil?
+          instance_num += 1
+          r.instance = instance_num
+        end
+
         r.redcap_hash
       end
 
