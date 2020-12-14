@@ -120,6 +120,29 @@ module RedCAP
       JSON.parse(resp.body)["count"].to_i # I suspect this count value is not accurate
     end
 
+    def raw_import(data_as_json, options)
+      merged_options = {
+        :token => redcap_api_token,
+        :content => 'record',
+        :format => 'json',
+        :type => 'flat',
+        :overwriteBehavior => 'normal',
+        :forceAutoNumber => 'false',
+        :data => data_as_json,
+        :returnContent => 'count',
+        :returnFormat => 'json'
+      }.merge(options)
+
+      resp = redcap_post('/', body: merged_options)
+      raise "Error importing repeating  record\n#{format_response_error(resp)}" unless resp.success?
+
+      # Because this API is implemented in singular
+      # fashion, it can only handle 1 record import
+      # and so only return 1 ID.
+      # That's why we assume a single element array
+      # and extract it for the caller
+      JSON.parse(resp.body)["count"].to_i # I suspect this count value is not accurate
+    end
 
     def import_file(record_id, field_name, file:, file_name: nil, content_type: nil, event: nil, repeat_instance: nil)
 
