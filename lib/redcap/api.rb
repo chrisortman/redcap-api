@@ -237,7 +237,9 @@ module RedCAP
     def redcap_post(path="/", body:)
 
       conn = Faraday.new(url: @api_url) do |conn|
-        conn.response :logger, nil, { headers: true, bodies: true }
+        conn.response :logger, nil, { headers: true, bodies: true } do |logger|
+          logger.filter(/(:token=>)\"(\w+)\"/, '\1[REMOVED]')
+        end
 
         # POST/PUT params encoders:
         conn.request :multipart

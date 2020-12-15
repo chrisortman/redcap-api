@@ -1,4 +1,9 @@
 
+### 0.1.5 - 2020-12-15
+
+* enhancments
+  * remove api token from log values
+ 
 ### 0.1.4 - 2020-12-14
 
 * enhancments
