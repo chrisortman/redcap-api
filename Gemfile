@@ -11,3 +11,4 @@ gem "dotenv"
 gem "byebug", "~> 11.1"
 
 gem "awesome_print", "~> 1.8"
+gem "activesupport"

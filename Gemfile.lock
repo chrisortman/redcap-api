@@ -60,6 +60,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  activesupport
   awesome_print (~> 1.8)
   byebug (~> 11.1)
   dotenv

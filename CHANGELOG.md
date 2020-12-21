@@ -3,7 +3,8 @@
 
 * enhancments
   * remove api token from log values
- 
+  * adds test helpers for generating responses
+
 ### 0.1.4 - 2020-12-14
 
 * enhancments

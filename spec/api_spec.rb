@@ -15,7 +15,7 @@ RSpec.describe RedCAP::API do
 
   end
 
-  it "integrates" do
+  xit "integrates" do
 
     # Reset the project, clear out any existing records
     record_ids = subject.export_records()
