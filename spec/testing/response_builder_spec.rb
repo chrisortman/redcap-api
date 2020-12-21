@@ -85,6 +85,10 @@ RSpec.describe RedCAP::Testing::ResponseBuilder do
       expect(subject.repeat_record("reading", :auto)).to include("record_id" => "XXX-002")
     end
 
+    it "can override default values" do
+      expect(subject.repeat_record(:reading, :auto, :value => 999)).to include("value" => "999")
+    end
+
     it "includes the data access group if it is set" do
       subject.data_access_group = "control_group"
       expect(subject.repeat_record("reading", :auto)).to include("redcap_data_access_group" => "control_group")

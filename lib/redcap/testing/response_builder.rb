@@ -14,17 +14,18 @@ module RedCAP
       end
 
       # TODO: I think values are always strings. Should I enforce this somehow?
-      def record
-        repeat_record("","")
+      def record(overrides = {})
+        repeat_record("","", overrides)
       end
 
-      def repeat_record(instrument, instance)
+      def repeat_record(instrument, instance, overrides = {})
 
         instrument = instrument.to_sym
         data = {}
+        example = self.example.merge(overrides)
 
         if @record_id.nil?
-          data[:record_id] = self.example[:record_id]
+          data[:record_id] = example[:record_id]
         else
           data[:record_id] = @record_id
         end
@@ -51,7 +52,7 @@ module RedCAP
           data[:redcap_data_access_group] = @data_access_group
         end
 
-        self.example.keys.each do |field|
+        example.keys.each do |field|
 
           # If field is for record id we skip
           # if field belongs to our instrument we copy
@@ -59,7 +60,7 @@ module RedCAP
           if field == :record_id
             next
           elsif belongs_to_instrument?(instrument, field)
-            data[field] = self.example[field]
+            data[field] = example[field].to_s
           else
             data[field] = ""
           end
