@@ -5,7 +5,7 @@ require "active_support/core_ext/hash"
 module RedCAP
   module Testing
     class ResponseBuilder
-      attr_accessor :example, :repeating, :repeating_example, :events, :record_id, :event_name
+      attr_accessor :example, :repeating, :repeating_example, :events, :record_id, :event_name, :data_access_group
 
       def initialize
         @instance_counts = Hash.new(1)
@@ -32,6 +32,10 @@ module RedCAP
           else
             data[:redcap_event_name] = @event_name
           end
+        end
+
+        unless self.data_access_group.nil?
+          data[:redcap_data_access_group] = @data_access_group
         end
 
         self.example.keys.each do |f|
@@ -71,6 +75,10 @@ module RedCAP
           else
             data[:redcap_event_name] = @event_name
           end
+        end
+
+        unless self.data_access_group.nil?
+          data[:redcap_data_access_group] = @data_access_group
         end
 
         self.example.keys.each do |f|
