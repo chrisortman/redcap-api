@@ -5,16 +5,24 @@ require "active_support/core_ext/hash"
 module RedCAP
   module Testing
     class ResponseBuilder
-      attr_accessor :example, :repeating, :repeating_example, :events, :record_id, :event_name, :data_access_group
+      attr_accessor :example, :repeating, :repeat_instruments, :events, :record_id, :event_name, :data_access_group
 
       def initialize
         @instance_counts = Hash.new(1)
         @record_id = nil
+        @repeat_instruments = {}
       end
 
       # TODO: I think values are always strings. Should I enforce this somehow?
       def record
+        repeat_record("","")
+      end
+
+      def repeat_record(instrument, instance)
+
+        instrument = instrument.to_sym
         data = {}
+
         if @record_id.nil?
           data[:record_id] = self.example[:record_id]
         else
@@ -22,8 +30,13 @@ module RedCAP
         end
 
         if self.repeating
-          data[:redcap_repeat_instrument] = ""
-          data[:redcap_repeat_instance] = ""
+          data[:redcap_repeat_instrument] = instrument.to_s
+          if instance == :auto
+            data[:redcap_repeat_instance] = @instance_counts[instrument]
+            @instance_counts[instrument] += 1
+          else
+            data[:redcap_repeat_instance] = instance
+          end
         end
 
         if self.events
@@ -38,62 +51,20 @@ module RedCAP
           data[:redcap_data_access_group] = @data_access_group
         end
 
-        self.example.keys.each do |f|
-          unless f == :record_id
-            data[f] = self.example[f]
-          end
-        end
+        self.example.keys.each do |field|
 
-        self.repeating_example&.each do |example_instrument, example_data|
-          example_data.keys.each { |f| data[f] = "" }
-        end
-
-        data.stringify_keys
-      end
-
-      def repeat_record(instrument, instance)
-
-        data = {}
-
-        if @record_id.nil?
-          data[:record_id] = self.example[:record_id]
-        else
-          data[:record_id] = @record_id
-        end
-
-        data[:redcap_repeat_instrument] = instrument
-        if instance == :auto
-          data[:redcap_repeat_instance] = @instance_counts[instrument]
-          @instance_counts[instrument] += 1
-        else
-          data[:redcap_repeat_instance] = instance
-        end
-
-        if self.events
-          if @event_name.nil?
-            data[:redcap_event_name] = "baseline_arm_1"
+          # If field is for record id we skip
+          # if field belongs to our instrument we copy
+          # otherwise we set it to blank
+          if field == :record_id
+            next
+          elsif belongs_to_instrument?(instrument, field)
+            data[field] = self.example[field]
           else
-            data[:redcap_event_name] = @event_name
+            data[field] = ""
           end
         end
 
-        unless self.data_access_group.nil?
-          data[:redcap_data_access_group] = @data_access_group
-        end
-
-        self.example.keys.each do |f|
-          unless f == :record_id
-            data[f] = ""
-          end
-        end
-
-        self.repeating_example.each do |example_instrument, example_data|
-          if instrument.to_sym == example_instrument.to_sym
-            example_data.each { |k,v| data[k] = v }
-          else
-            example_data.keys.each { |f| data[f] = "" }
-          end
-        end
         data.stringify_keys
       end
 
@@ -110,16 +81,18 @@ module RedCAP
           {:redcap_event_name => "baseline_arm_1"}
         end
 
-        def add_repeating_fields(hash)
-          hash.merge!(repeating_keys)
-          if self.repeating_example
-            self.repeating_example.each do |instrument, example|
-              example.keys.each do |f|
-                hash[f] = ""
-              end
-            end
+        # >> field belongs to our instrument if:
+        # >>>> if instrument is repeat and  in field list
+        # >>>> or
+        # >>>> instrument is "" / main and 
+        def belongs_to_instrument?(instrument, field)
+          if self.repeat_instruments.has_key?(instrument) && self.repeat_instruments[instrument].include?(field)
+            true
+          elsif instrument.empty? && !self.repeat_instruments.values.flatten.include?(field)
+            true
+          else
+            false
           end
-          hash
         end
     end
   end

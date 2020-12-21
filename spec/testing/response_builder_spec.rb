@@ -22,6 +22,7 @@ RSpec.describe RedCAP::Testing::ResponseBuilder do
     subject.data_access_group = "control_group"
     expect(subject.record).to include("redcap_data_access_group" => "control_group")
   end
+
   context "when no repeatable instruments are defined" do
 
     it "generates a record with only basic fields" do
@@ -38,12 +39,17 @@ RSpec.describe RedCAP::Testing::ResponseBuilder do
   context "when some instruments repeat" do
 
     before(:each) do
-      subject.repeating = true
-      subject.repeating_example = {
-        :reading => {
-          :value => "50"
-        }
+      subject.example = {
+        :record_id => "XXX-001",
+        :first_name => "Jean Luc",
+        :last_name => "Skywalker",
+        :value => "50"
       }
+      subject.repeating = true
+      subject.repeat_instruments = {
+        :reading => [:value]
+      }
+
     end
 
     it "includes the repeating fields" do
@@ -105,10 +111,8 @@ RSpec.describe RedCAP::Testing::ResponseBuilder do
     before(:each) do
       subject.events = true
       subject.repeating = true
-      subject.repeating_example = {
-        :reading => {
-          :value => "50"
-        }
+      subject.repeat_instruments = {
+        :reading => [:value]
       }
     end
 
