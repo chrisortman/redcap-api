@@ -69,7 +69,6 @@ module RedCAP
     end
 
     def import_repeating(record_id, records, instrument)
-      raise "Instrument names should be lower case: #{instrument}" if instrument =~ /[A-Z]+/
       existing = export_records([record_id], fields: ["record_id"], forms: Array(instrument))
 
       instance_num = existing.select{ |r|
